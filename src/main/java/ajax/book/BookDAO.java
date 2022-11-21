@@ -69,7 +69,7 @@ public class BookDAO {
 		try{
 			//con=ds.getConnection();
 			con=DBUtil.getCon();
-			String sql="select * from book where title like upper(?)";
+			String sql="select * from book where title like ?";
 			ps=con.prepareStatement(sql);			
 			ps.setString(1,"%"+title+"%");
 			rs=ps.executeQuery();

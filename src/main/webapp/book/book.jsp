@@ -19,7 +19,19 @@ response.setDateHeader ("Expires", 0);
 	src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <!-- ------------------------------------------------- -->
 <style type="text/css">
-
+	.listbox{
+		position:relative;
+		left:5px;
+		width:510px;
+		background:#white;
+		color:gray;
+		border:1px solid silver;
+	}
+	.blist{
+		margin:0;
+		padding:5px;
+		list-style-type: none;
+	}
 
 </style>
 
@@ -44,7 +56,7 @@ response.setDateHeader ("Expires", 0);
 			})
 		
 		*/
-		/* 삭제 기
+		/* 삭제 기능
 				ajax요청 보내기
 				get방식으로
 				?isbn=visbn
@@ -123,9 +135,25 @@ response.setDateHeader ("Expires", 0);
 			//post로.
 			//bookUpdate.jsp로
 			//data 속성값으로 수정할 값을 파라미터 데이터로 만들어 보내야 한다.
-			//폼 객체의 serialize()함수 활용
+			//폼 객체의 serialize()함수 활용 => form 안의 int데이터들을 넘겨준다.
 			let paramStr=$('#editF').serialize();
-			alert(paramStr);
+			//alert(paramStr);
+			$.ajax({
+				type:'post',
+				url:'bookUpdate.jsp',
+				data:paramStr,
+				dataType:'json',
+				cache:false,
+			}).done(function(res){ //success일때 수행하는 콜백함수
+				//alert('성공: '+JSON.stringify(res));
+				let n=res.result;
+				//alert(n)
+				if(n>0){
+					getAllBook();
+				}
+			}).fail(function(err){ //error날떄 수행하는 콜백함수
+				alert('error: '+err.status);
+			})
 			
 		}
 		
@@ -145,7 +173,112 @@ response.setDateHeader ("Expires", 0);
 			})
 		
 	}
-
+	 	$(function(){
+			getAllBook();
+		}) 
+		
+	function getPublish(){
+	 		$.ajax({
+	 			type: 'get',
+	 			url:'bookPublish.jsp',
+	 			cache:false,
+	 			dataType:'json'
+	 		})
+	 		.done(function(res){
+	 			//alert(JSON.stringify(res));
+	 			showSelect(res);
+	 		})
+	 		.fail(function(err){
+	 			alert('error: '+err.status);
+	 		})
+	 	}
+	
+	 function showSelect(data){
+		 let str='<select name="publish" onchange="getTitleByPub(this.value)">';
+		 	str+='<option value"">:::출판사 목록:::</option>';
+		 	$.each(data, function(i, pub){
+		 		str+='<option value="'+pub.publish+'">'+pub.publish+"</option>";
+		 	})
+		 	str+="</select>";
+		 $('#sel').html(str);
+	 }
+	
+	 
+	 
+	 function showSelect2(data){
+		 let str='<select name="publishTitle" onchange="bookInfo(this.value)">';
+		 	str+='<option value"">:::도 서 명:::</option>';
+		 	$.each(data, function(i, book){
+		 		str+='<option value="'+book.title+'">'+book.title+"</option>";
+		 	})
+		 	str+="</select>";
+		 $('#sel2').html(str);
+	 }
+	 
+	 function bookInfo(vtitle){
+		 //alert(vtitle);
+		 if(vtitle=='검색'){ //검색버튼이 검색상태라면.
+			 vtitle=$('#books').val(); //id books 에서 검색어 가져오기
+		 }
+		 
+		$.ajax({
+			type:'get',
+			url:'bookAll.jsp?title='+encodeURIComponent(vtitle),
+			cache:false,
+			dataType:'html'
+		}).done(function(res){
+			//alert(res);
+			$('#book_data').html(res)
+		}).fail(function(err){
+			alert('err: '+err.status);
+		})
+	 }
+		
+	 
+	 
+	 //각 출판사별 도서제목 가져오기 
+	 function getTitleByPub(val){
+		 $.ajax({
+			type:'get',
+			url:'bookTitle.jsp?publish='+encodeURIComponent(val), //한글 처리 문제 생기면 <<encodeURIComponet()쓰기.
+			dataType:'json',
+			cache:false,
+			success:function(res){
+				//alert(res);	
+				showSelect2(res);
+			},
+			error:function(err){
+				alert('error: '+err.status);
+			}
+		 })
+	 }
+	 
+	 function autoComp(val){
+		 console.log(val)
+		 $.ajax({
+			type:'get',
+			url:'autoComplete.jsp?title='+encodeURIComponent(val),
+			dataType:'html',
+			cache:false,
+			success:function(res){
+				//alert(res);	
+				$('#lst2').html(res);
+				$('#lst1').show();
+				$('#lst2').show();
+			},
+			error:function(err){
+				alert('error: '+err.status);
+			}
+		 })
+	 }
+	 
+	 function setting(vtitle){
+		 //alert(vtitle);
+		 $('#books').val(vtitle);
+		 $('#lst1').hide();
+		 $('#lst2').hide();
+	 }
+	 
 </script>
 </head>
 <!--onload시 출판사 목록 가져오기  -->
@@ -179,7 +312,7 @@ response.setDateHeader ("Expires", 0);
 <div>
  
  <button type="button"
-  onclick="getBook()"
+  onclick="bookInfo('검색')"
   class="btn btn-primary">검색</button>
  
  <button type="button" onclick="getAllBook()" class="btn btn-success">모두보기</button>

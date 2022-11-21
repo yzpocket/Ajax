@@ -3,9 +3,17 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%
+	String title=request.getParameter("title");//도서제목
+	System.out.println("title: "+title);
 	BookDAO dao=new BookDAO();
-	List<BookDTO> arr=dao.getAllBook();
-	
+
+	List<BookDTO> arr=null;
+	if(title==null){
+		arr=dao.getAllBook(); //모든 도서 목록 가져오고
+	}else{
+		arr=dao.getFindBook(title);//도서명으로 검색한 도서목록 가져오기.
+	}
+
 	request.setAttribute("arr", arr);
 	
 %>
