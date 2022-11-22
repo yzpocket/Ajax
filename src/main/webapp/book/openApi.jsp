@@ -18,12 +18,12 @@ $(function(){
 			alert('검색어 입력')
 			return;
 		}
-		let url="openApiResult.jsp?query="+encodeURIComponent(keyword)+"&display=20start=1";
+		let url="openApiResult.jsp?query="+encodeURIComponent(keyword)+"&display=20&start=1";
 		send(url, keyword, 1);
 	})
 })
 
-function send(url, keyword, cpage){
+function send(url, keyword, cpage){ //ajax요청 보내는 함수
 	$.ajax({
 		type:'get',
 		url:url,
@@ -39,9 +39,10 @@ function send(url, keyword, cpage){
 				total:total,
 				keyword:keyword,
 				cpage:cpage,
-				display:20,
+				display:20
 		}
-		showList(res.items, obj)
+		showList(res.items, obj);
+		showPage(obj);
 	})
 	.fail(function(err){
 		alert('err: '+err.status);
@@ -70,6 +71,69 @@ function showList(items, obj){
 	str+='</table>';
 	
 	$('#openApiBook').html(str);
+}
+
+/* 총 게시글 수 : total
+ * 한 페이지당 보여줄 개수 : display
+ * 페이지수 :
+	 
+	 Java에서는 
+	 if(total%display==0){
+		 pageCount=total/display;
+	 }else{
+		 pageCount=total/display+1;
+	 }
+	 ==> PageCount=(total-1)/display+1; //<<<<========== 외우기 java용 페이지 구하기
+	 JavaScript에서는 int/int => 실수가 나온다. 소수점..
+	let pageCount=Math.ceil((total-1)/display); //<<<<==== 외우기 javascript용 페이지 구하기
+			Math.ceill()로 +1을하지 않고 그냥 올린다.
+
+ */
+function showPage(obj){
+	let total=obj.total; //총 검색한 도서개수
+	let display=obj.display; //한 페이지당 보여줄 목록 개수
+	if(total>200){ // 최대200개로 제한
+		total=200;
+	}
+	//let pageCount=Math.floor((total-1)/display+1);  //Math.floor()로 실수의 소수점을 버린다.
+	let pageCount=Math.ceil((total-1)/display); //<<<<==== Math.ceill()로 +1을하지 않고 그냥 올린다.
+	//alert('pageCount: '+pageCount);
+	/*
+	#start값 구하기
+	cpage(i)	display		start		
+		1			20			1
+		2						21
+		3						41
+		4						61
+		
+		===> (c-1)*d+1
+	*/
+	let query=obj.keyword; //검색어
+	
+	
+	let str='<ul class="pagination">';
+		for(let i=1;i<=pageCount;i++){
+			let start=(i-1)*display+1; //시작값 네이버에 넘길 파라미터 값
+			console.log('start : '+start); 
+			if(i==obj.cpage){
+			str+='<li class="active">';
+			}else{
+			str+='<li>';
+			}
+			str+='<a href="#" onclick="fetch(\''+query+'\', '+start+', '+i+')">';
+			str+=i
+			str+='</a>';
+			str+='</li>';
+		}
+		str+='</ul>';
+		$('#pageNavi').html(str);
+}
+	
+function fetch(query, start, cpage){
+	//alert(query+"/"+start+"/"+cpage);
+	let url="openApiResult.jsp?query="+encodeURIComponent(query)+"&display=20&start="+start;
+	send(url, query, cpage);
+
 }
 
 </script>
